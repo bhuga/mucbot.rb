@@ -8,19 +8,25 @@ require 'optparse'
 require 'xmpp4r'
 require 'xmpp4r/client'
 require 'xmpp4r/xhtml'
+require 'yaml'
 
 include Jabber
 
-myJID = JID.new('user@example.com')
-myPassword = 'super secret'
+
+conf = YAML.load("mucbot.yml")
+
+my_jid = JID.new(conf['trac-sender-jid'])
+password = conf['trac-sender-password']
+trac_url = conf['trac-url']
 
 to = nil
 subject = path = revision = ''
+
 OptionParser.new do |opts|
   opts.banner = 'Usage: svn-xmpp-report.rb [options]'
   opts.separator ''
   opts.on('-s', '--subject SUBJECT', 'sets the message\'s subject') { |s| subject = s }
-  opts.on('-t', '--to DESTJID', 'sets the receiver') { |t| to = JID.new(t) }
+  opts.on('-t', '--to DESTJID', 'sets the receiver') { |t| to = JID.new(t.nil? ? conf['mucbot-jid'] : t) }
   opts.on('-r', '--rev REVISION', 'sets the svn revision number') { |r| revision = r }
   opts.on('-p', '--path PATH', 'sets the svn repository path') { |p| path = p }
   opts.on_tail('-h', '--help', 'Show this message') {
@@ -30,15 +36,11 @@ OptionParser.new do |opts|
   opts.parse!(ARGV)
 end
 
-if to.nil?
-  puts "No receiver specified. See svn-xmpp-report.rb -h"
-  exit
-end
+
+abort "No recipient specified" unless to
 
 ['revision','path'].each do | opt |
-  if opt == ''
-    puts "No #{opt} specified.  See svn-xmpp-report.rb -h"
-  end
+  abort "No #{opt} specified.  See svn-xmpp-report.rb -h" if opt == ''
 end
 
 output = `svnlook -r #{revision} info #{path}`
@@ -52,11 +54,10 @@ else
   commit_message << "#{lines.size - 5} more lines..."
 end
 commit_message = commit_message.join("<br/>")
-commit_message.gsub!(/#(\d+)/,'<a href="https://trac.example.com/ticket/\1">#\1</a>')
-commit_message.gsub!(/r(\d+)/,'<a href="https://trac.example.com/changeset/\1">r\1</a>')
-xhtml = "<a href=\"https://trac.example.com/changeset/#{revision}\">r#{revision}</a> by #{user}<br/>"
+commit_message.gsub!(/#(\d+)/,"<a href=\"#{trac_url}/ticket/\\1\">#\1</a>")
+commit_message.gsub!(/r(\d+)/,"<a href=\"#{trac_url}/changeset/\\1\">r\1</a>")
+xhtml = "<a href=\"#{trac_url}/changeset/#{revision}\">r#{revision}</a> by #{user}<br/>"
 xhtml += commit_message
-
 
 m = Message::new(to,"HTML Trac Message").set_type(:normal).set_id('1').set_subject('trac update')
 

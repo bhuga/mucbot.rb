@@ -9,9 +9,11 @@ require 'xmpp4r/muc'
 require 'xmpp4r/client'
 require 'daemons/daemonize'
 
-user = 'user@example.com'
-password = 'super secret'
+conf = YAML.load('./mucbot.conf')
 
+
+user = conf['mucbot-jid']
+password = conf['mucbot-jid-password']
 
 Daemonize.daemonize
 
@@ -23,16 +25,11 @@ cl.send(Jabber::Presence.new)
 muc = Jabber::MUC::SimpleMUCClient.new(cl)
 
 cl.add_message_callback do |m|
-  if (m.elements['html'])
-    puts "html: #{m.elements['html']}"
-  end
-  if m.type != :error
-    muc.send(m)
-  end
+  muc.send(m) unless m.type == :error
 end
 
 puts "running..."
-muc.join("chatroom@chat.example.com/nick")
+muc.join(conf['muc'])
 muc.say("Relaying messages!")
 
 Thread.stop

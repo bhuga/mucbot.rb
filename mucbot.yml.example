@@ -1,0 +1,6 @@
+trac-url              : trac.example.com
+trac-sender-jid       : user@example.com
+trac-sender-password  : 'super secret'
+mucbot-jid            : user@example.com
+mucbot-jid-password   : 'super secret'
+muc                   : 'room@chat.example.com/nickname'

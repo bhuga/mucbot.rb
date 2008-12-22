@@ -13,7 +13,7 @@ require 'yaml'
 include Jabber
 
 
-conf = YAML.load("mucbot.yml")
+conf = YAML.load_file("mucbot.yml")
 
 my_jid = JID.new(conf['trac-sender-jid'])
 password = conf['trac-sender-password']
@@ -54,19 +54,19 @@ else
   commit_message << "#{lines.size - 5} more lines..."
 end
 commit_message = commit_message.join("<br/>")
-commit_message.gsub!(/#(\d+)/,"<a href=\"#{trac_url}/ticket/\\1\">#\1</a>")
-commit_message.gsub!(/r(\d+)/,"<a href=\"#{trac_url}/changeset/\\1\">r\1</a>")
+commit_message.gsub!(/#(\d+)/,"<a href=\"#{trac_url}/ticket/\\1\">#\\1</a>")
+commit_message.gsub!(/r(\d+)/,"<a href=\"#{trac_url}/changeset/\\1\">r\\1</a>")
 xhtml = "<a href=\"#{trac_url}/changeset/#{revision}\">r#{revision}</a> by #{user}<br/>"
 xhtml += commit_message
 
 m = Message::new(to,"HTML Trac Message").set_type(:normal).set_id('1').set_subject('trac update')
-
+puts "#{xhtml}"
 html_element = Jabber::XHTML::HTML.new(xhtml)
 m.add_element(html_element)
 m.set_body(html_element.to_text)
 
-cl = Client.new(myJID)
+cl = Client.new(my_jid)
 cl.connect
-cl.auth(myPassword)
+cl.auth(password)
 cl.send(m)
 cl.close

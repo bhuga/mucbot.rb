@@ -8,8 +8,9 @@ require 'xmpp4r'
 require 'xmpp4r/muc'
 require 'xmpp4r/client'
 require 'daemons/daemonize'
+require 'yaml'
 
-conf = YAML.load('./mucbot.conf')
+conf = YAML.load_file('./mucbot.yml')
 
 
 user = conf['mucbot-jid']

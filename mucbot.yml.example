@@ -1,4 +1,4 @@
-trac-url              : trac.example.com
+trac-url              : https://trac.example.com
 trac-sender-jid       : user@example.com
 trac-sender-password  : 'super secret'
 mucbot-jid            : user@example.com
